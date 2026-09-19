@@ -1,0 +1,61 @@
+# Publishes the private review copy to GitHub Pages.
+#
+# The repository root holds the PRODUCTION build (paths rooted at /, indexable,
+# for notyga.fr). Pages needs a different variant: mounted at /notyga/ and
+# marked noindex. Rather than commit a second copy of every file, this rebuilds
+# that variant on each push and deploys it straight from the artifact.
+#
+# One-time setup: repository Settings -> Pages -> Source: "GitHub Actions".
+name: Deploy preview to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never let two deploys race; queue them and keep the newest.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # Standard library only, so there is nothing to install.
+      - name: Build the /notyga/ preview variant
+        run: python tools/build_pages.py --target github --out _site
+
+      - name: Check no link escapes the subpath
+        run: |
+          if grep -rEo 'href="/[^"]*"' _site --include='*.html' \
+             | grep -v 'href="/notyga/'; then
+            echo "::error::found a root-relative link outside /notyga/"
+            exit 1
+          fi
+          echo "all root-relative links stay inside /notyga/"
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
