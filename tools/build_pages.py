@@ -105,6 +105,7 @@ COPY = {
                      "businesses and organizations make better decisions",
         "hero_cta1": "Explore our expertise",
         "hero_cta2": "Start a conversation",
+        "hero_alt": "Territorial landscape with hills, roads and river",
 
         "expertise_eyebrow": "What we do",
         "expertise_h2": "Expertise across seven domains",
@@ -150,6 +151,7 @@ COPY = {
         "approach_eyebrow": "How we work",
         "approach_h2": "From question to decision",
         "approach_lede": "Every engagement is tailored. The path through it stays the same.",
+        "approach_banner_alt": "Aerial view of a winding river and surrounding landscape",
         "steps": [
             ("Frame",
              "We start with your decision, not your dataset. What has to be decided, by whom, "
@@ -232,6 +234,7 @@ COPY = {
                      "des entreprises et des territoires",
         "hero_cta1": "Découvrir nos expertises",
         "hero_cta2": "Parlons de votre projet",
+        "hero_alt": "Paysage territorial avec collines, routes et fleuve",
 
         "expertise_eyebrow": "Ce que nous faisons",
         "expertise_h2": "Sept domaines d’expertise",
@@ -278,6 +281,7 @@ COPY = {
         "approach_eyebrow": "Notre méthode",
         "approach_h2": "De la question à la décision",
         "approach_lede": "Chaque mission est sur mesure. La démarche, elle, reste la même.",
+        "approach_banner_alt": "Vue aérienne d'un fleuve et des territoires environnants",
         "steps": [
             ("Cadrer",
              "Nous partons de votre décision, pas de vos données. Ce qu’il faut décider, par qui et "
@@ -425,7 +429,7 @@ def header(c):
   <header class="header" data-header>
     <div class="wrap header__inner">
       <a class="brand" href="{c['href']}" aria-label="Notyga — {c['hero_eyebrow']}">
-        <img src="{a}img/logo-wordmark.png" alt="Notyga" width="1200" height="201">
+        <img src="{a}img/logo.svg" alt="Notyga — Data intelligence" width="524" height="229">
       </a>
 
       <button class="nav-toggle" type="button" data-nav-toggle
@@ -464,15 +468,19 @@ def hero(c):
     return f"""    <section class="hero">
       <div class="hero__grid" aria-hidden="true"></div>
       <div class="wrap hero__inner">
-        <p class="eyebrow" data-reveal>{c['hero_eyebrow']}</p>
-        <h1 data-reveal>{c['hero_h1']}</h1>
-        <p class="lede" data-reveal>{c['hero_lede']}</p>
-        <div class="hero__actions" data-reveal>
-          <a class="btn" href="#expertise">{c['hero_cta1']}{ARROW}</a>
-          <a class="btn btn--ghost" href="#contact">{c['hero_cta2']}</a>
+        <div class="hero__content">
+          <p class="eyebrow" data-reveal>{c['hero_eyebrow']}</p>
+          <h1 data-reveal>{c['hero_h1']}</h1>
+          <p class="lede" data-reveal>{c['hero_lede']}</p>
+          <div class="hero__actions" data-reveal>
+            <a class="btn" href="#expertise">{c['hero_cta1']}{ARROW}</a>
+            <a class="btn btn--ghost" href="#contact">{c['hero_cta2']}</a>
+          </div>
         </div>
-        <img class="motif" src="{a}img/logo-mark.png" alt="" width="1200" height="126"
-             loading="lazy" data-reveal>
+        <figure class="hero__media" data-reveal>
+          <img src="{a}img/hero.jpg" alt="{c['hero_alt']}" width="1200" height="1500"
+               fetchpriority="high" decoding="async">
+        </figure>
       </div>
 
       <div class="marquee">
@@ -484,9 +492,14 @@ def hero(c):
 
 
 def expertise(c):
+    a = c["asset_prefix"]
     cards = []
     for i, (icon, title, body) in enumerate(c["services"], start=1):
         cards.append(f"""        <article class="card" data-reveal>
+          <div class="card__media">
+            <img src="{a}img/expertise-{icon}.jpg" alt="" width="960" height="640"
+                 loading="lazy" decoding="async">
+          </div>
           <div class="card__top">
             <span class="card__icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
@@ -519,6 +532,7 @@ def expertise(c):
 
 
 def approach(c):
+    a = c["asset_prefix"]
     steps = "\n".join(
         f"""          <article class="step" data-reveal>
             <p class="step__num">{i:02d}</p>
@@ -535,6 +549,10 @@ def approach(c):
           <h2 data-reveal>{c['approach_h2']}</h2>
           <p class="lede" data-reveal>{c['approach_lede']}</p>
         </div>
+        <figure class="approach__banner" data-reveal>
+          <img src="{a}img/banner-approach.jpg" alt="{c['approach_banner_alt']}"
+               width="2000" height="860" loading="lazy" decoding="async">
+        </figure>
         <div class="steps">
 {steps}
         </div>
@@ -606,8 +624,8 @@ def footer(c):
     <div class="wrap">
       <div class="footer__top">
         <div class="footer__brand">
-          <img src="{a}img/logo-full-white.png" alt="Notyga — Data intelligence"
-               width="1400" height="613" loading="lazy">
+          <img src="{a}img/logo-white.svg" alt="Notyga — Data intelligence"
+               width="524" height="229" loading="lazy">
           <p>{c['footer_tagline']}</p>
         </div>
 
@@ -692,7 +710,6 @@ def error_page(c):
         header(c),
         '  <main id="main">',
         '    <section class="section wrap error">',
-        f'      <img class="motif" src="{a}img/logo-mark.png" alt="" width="1200" height="126">',
         f'      <h1>{c["404_h1"]}</h1>',
         f'      <p>{c["404_p"]}</p>',
         f'      <a class="btn" href="{c["href"]}">{c["404_cta"]}{ARROW}</a>',

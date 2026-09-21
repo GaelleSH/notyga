@@ -81,3 +81,25 @@ for size, name in ((512, "favicon-512.png"), (180, "apple-touch-icon.png"),
                    (32, "favicon-32.png")):
     fav.resize((size, size), Image.LANCZOS).save(os.path.join(OUT, name), optimize=True)
     print("  %-26s %dx%d" % (name, size, size))
+
+# Editorial & expertise photos (Unsplash / Pexels)
+photos_dir = os.path.join(SRC, "photos")
+if os.path.isdir(photos_dir):
+    print("photos:")
+    specs = {
+        "hero.jpg": (1200, 1500),
+        "banner-approach.jpg": (2000, 860),
+    }
+    for filename in sorted(os.listdir(photos_dir)):
+        if not filename.endswith(".jpg"):
+            continue
+        src_path = os.path.join(photos_dir, filename)
+        out_path = os.path.join(OUT, filename)
+        img = Image.open(src_path).convert("RGB")
+        if filename in specs:
+            tw, th = specs[filename]
+            img = img.resize((tw, th), Image.LANCZOS)
+        elif filename.startswith("expertise-"):
+            img = img.resize((960, 640), Image.LANCZOS)
+        img.save(out_path, quality=85, optimize=True, progressive=True)
+        print("  %-26s %dx%d" % (filename, img.width, img.height))

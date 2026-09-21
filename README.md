@@ -138,9 +138,11 @@ invented; if you want those on the page, they need to come from you.
 - **Palette.** One hue family, sampled from the logo file (`#006401`), plus warm
   neutrals. Tokens live at the top of `styles.css`. No second brand colour is
   introduced anywhere.
-- **Logo.** Unchanged. The originals were flat JPEGs on white; `build_assets.py`
-  keys out the white to produce transparent PNGs in three lockups (mark,
-  wordmark, full) and a reversed white set for the dark sections.
+- **Logo.** Used whole, as supplied. `assets/img/logo.svg` (green) and
+  `logo-white.svg` (reversed, for the footer) are the vector paths extracted
+  from `assets/img/Logo Notyga V2.pdf`. The header and footer both show the
+  full lockup (motif + wordmark + tagline); it is never split into parts.
+  `logo-full.png` is kept only as the raster Open Graph / JSON-LD image.
 - **Type.** Inter for everything, JetBrains Mono for the small uppercase labels,
   both from Google Fonts. To self-host instead, drop the woff2 files in
   `assets/fonts/`, replace the `<link>` in `tools/build_pages.py` with
