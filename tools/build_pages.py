@@ -108,7 +108,7 @@ COPY = {
         "hero_alt": "Territorial landscape with hills, roads and river",
 
         "expertise_eyebrow": "What we do",
-        "expertise_h2": "Expertise across seven domains",
+        "expertise_h2": "Our areas of expertise",
         "expertise_lede": "From territorial planning to athletic performance, the same "
                           "discipline applies: understand the decision, model the data, "
                           "deliver something you can act on.",
@@ -237,7 +237,7 @@ COPY = {
         "hero_alt": "Paysage territorial avec collines, routes et fleuve",
 
         "expertise_eyebrow": "Ce que nous faisons",
-        "expertise_h2": "Sept domaines d’expertise",
+        "expertise_h2": "Nos domaines d’expertise",
         "expertise_lede": "De l’aménagement du territoire à la performance sportive, la même "
                           "exigence s’applique : comprendre la décision à prendre, modéliser la "
                           "donnée, livrer un résultat exploitable.",
