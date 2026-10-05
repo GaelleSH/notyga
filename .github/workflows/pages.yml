@@ -1,12 +1,11 @@
-# Publishes the private review copy to GitHub Pages.
+# Publishes notyga.fr through GitHub Pages.
 #
-# The repository root holds the PRODUCTION build (paths rooted at /, indexable,
-# for notyga.fr). Pages needs a different variant: mounted at /notyga/ and
-# marked noindex. Rather than commit a second copy of every file, this rebuilds
-# that variant on each push and deploys it straight from the artifact.
+# Pages serves this repository on the custom domain notyga.fr, i.e. from the
+# root of the domain, so it deploys the PRODUCTION build (paths rooted at /,
+# indexable). The custom domain itself is set in Settings -> Pages.
 #
 # One-time setup: repository Settings -> Pages -> Source: "GitHub Actions".
-name: Deploy preview to GitHub Pages
+name: Deploy notyga.fr to GitHub Pages
 
 on:
   push:
@@ -34,17 +33,18 @@ jobs:
           python-version: "3.12"
 
       # Standard library only, so there is nothing to install.
-      - name: Build the /notyga/ preview variant
-        run: python tools/build_pages.py --target github --out _site
-
-      - name: Check no link escapes the subpath
+      - name: Build the production site
         run: |
-          if grep -rEo 'href="/[^"]*"' _site --include='*.html' \
-             | grep -v 'href="/notyga/'; then
-            echo "::error::found a root-relative link outside /notyga/"
+          python tools/build_pages.py --target production --out _site
+          cp CNAME _site/
+
+      - name: Check no link points at the old /notyga/ subpath
+        run: |
+          if grep -rE '(href|src)="/notyga/' _site --include='*.html'; then
+            echo "::error::found a link to the /notyga/ subpath"
             exit 1
           fi
-          echo "all root-relative links stay inside /notyga/"
+          echo "no link points at /notyga/"
 
       - uses: actions/upload-pages-artifact@v3
         with:

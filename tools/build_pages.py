@@ -703,7 +703,9 @@ def page(c):
 
 
 def error_page(c):
-    a = c["asset_prefix"]
+    # Served for any missing URL, at any depth, so relative asset paths would
+    # resolve against the wrong directory. Root them at the base instead.
+    c = dict(c, asset_prefix=c["base"] + "assets/")
     return "\n".join([
         head(c, page_title=c["404_title"], canonical=False),
         "<body>",
