@@ -7,6 +7,57 @@
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
+   0. Fonts
+   Self-hosted variable fonts (SIL OFL, licences in assets/fonts/), so no
+   visitor data is sent to Google. Latin covers English and French; latin-ext
+   is only downloaded if a page uses a character from its range.
+   -------------------------------------------------------------------------- */
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url("../fonts/inter-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url("../fonts/inter-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF,
+    U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020,
+    U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-weight: 400 500;
+  font-display: swap;
+  src: url("../fonts/jetbrains-mono-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-weight: 400 500;
+  font-display: swap;
+  src: url("../fonts/jetbrains-mono-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF,
+    U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020,
+    U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* --------------------------------------------------------------------------
    1. Tokens
    -------------------------------------------------------------------------- */
 
@@ -1222,4 +1273,165 @@ h3 {
   body {
     color: #000;
   }
+}
+
+/* --------------------------------------------------------------------------
+   14. Legal page
+   -------------------------------------------------------------------------- */
+
+.legal h1 {
+  font-size: var(--fs-h2);
+  max-width: 20ch;
+}
+
+.legal__updated {
+  margin-top: 1rem;
+  font-size: var(--fs-small);
+  color: var(--muted);
+}
+
+.legal__body {
+  max-width: var(--maxw-text);
+  color: var(--ink-soft);
+}
+
+.legal__body h2 {
+  margin-top: clamp(2.5rem, 2rem + 2vw, 3.5rem);
+  padding-top: 1.75rem;
+  margin-bottom: 1rem;
+  border-top: 1px solid var(--line);
+  font-size: var(--fs-h3);
+  color: var(--ink);
+}
+
+.legal__body h3 {
+  margin: 1.75rem 0 0.5rem;
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.legal__body p + p,
+.legal__body p + dl {
+  margin-top: 1rem;
+}
+
+.legal__body a {
+  color: var(--green-600);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.legal__body a:hover {
+  color: var(--green-700);
+}
+
+.legal__body dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.6rem 2rem;
+  margin: 0;
+}
+
+.legal__body dt {
+  font-size: var(--fs-small);
+  color: var(--muted);
+  padding-top: 0.1rem;
+}
+
+.legal__body dd {
+  margin: 0;
+}
+
+@media (max-width: 600px) {
+  .legal__body dl {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .legal__body dd + dt {
+    margin-top: 0.85rem;
+  }
+}
+
+/* Placeholder for a legal detail not supplied yet. Deliberately loud. */
+.legal__todo {
+  padding: 0.1em 0.45em;
+  border-radius: 4px;
+  background: #fff1b8;
+  color: #5c4300;
+  font-size: 0.9em;
+}
+
+/* Footer link to the legal page. */
+.footer__sep {
+  margin-inline: 0.5rem;
+}
+
+.footer__legal {
+  color: var(--green-200);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+  transition: color 0.2s var(--ease);
+}
+
+.footer__legal:hover {
+  color: #fff;
+}
+
+.legal__body p + ul,
+.legal__body ul + p {
+  margin-top: 1rem;
+}
+
+.legal__body ul {
+  padding-left: 1.25rem;
+  list-style: disc;
+}
+
+.legal__body li + li {
+  margin-top: 0.5rem;
+}
+
+.legal__body li::marker {
+  color: var(--green-500);
+}
+
+/* Review copies only (tools/build_share.py --compare): host-dependent
+   passages shown as labelled options, and a banner explaining them. */
+.legal__review {
+  margin-top: 1.5rem;
+  max-width: var(--maxw-text);
+  padding: 1rem 1.25rem;
+  border-radius: var(--radius);
+  background: #fff1b8;
+  color: #5c4300;
+  font-size: var(--fs-small);
+}
+
+.legal__review strong {
+  color: inherit;
+}
+
+.legal__variants {
+  display: grid;
+  gap: 1rem;
+}
+
+.legal__variant {
+  padding: 1rem 1.25rem;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--paper-2);
+  break-inside: avoid;
+}
+
+.legal__variant-label {
+  margin-bottom: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: var(--fs-label);
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--green-700);
 }

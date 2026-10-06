@@ -10,3 +10,6 @@ __pycache__/
 Thumbs.db
 .vscode/
 .idea/
+
+# Standalone copies for sharing (not deployed)
+_share/

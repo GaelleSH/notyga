@@ -48,6 +48,77 @@ ARROW = ('<svg class="arrow" width="16" height="16" viewBox="0 0 16 16" fill="no
 EMAIL = "contact@notyga.com"
 
 # ---------------------------------------------------------------------------
+# Legal details, for the "mentions légales" (French LCEN, art. 6-III) and the
+# privacy policy. Company data comes from the public company register
+# (annuaire-entreprises.data.gouv.fr, SIREN 903 594 703). Fill in every None:
+# until then the page shows a highlighted placeholder and the build warns.
+# ---------------------------------------------------------------------------
+
+LEGAL = {
+    "company": "Saryga",
+    "legal_form": {"fr": "SAS (société par actions simplifiée)",
+                   "en": "SAS (simplified joint-stock company)"},
+    "capital": "2 000 €",    # share capital (Kbis or statuts)
+    "address": "566 chemin de la Carrière, 71700 Tournus",
+    "siren": "903 594 703",
+    "siret": "903 594 703 00014",
+    "rcs_city": "Mâcon",     # city of the RCS registry (Kbis)
+    "vat": "FR05 903 594 703",
+    "phone": "09 71 16 45 62",
+    "phone_intl": "+33 9 71 16 45 62",
+    # A company's publication director is its legal representative.
+    "director": "Gaëlle Saint-Hilary",
+}
+
+LEGAL_UPDATED = (2026, 10, 6)   # (year, month, day) shown as "last updated"
+
+# Who processes the emails sent to contact@notyga.com (MX: Exchange Online).
+MAIL_PROVIDER = "Microsoft 365"
+
+# The legal page must name whoever actually serves the site. Switch HOST when
+# the site moves, rebuild, and deploy the result to the new host.
+HOSTS = {
+    # GitHub Pages: GitHub runs the server and keeps its logs, in the US.
+    "github": {
+        "label": {"fr": "GitHub Pages", "en": "GitHub Pages"},
+        "logs": "provider",
+        "name": "GitHub, Inc.",
+        "address": "88 Colton Street, San Francisco, CA 94107",
+        "country": {"en": "United States", "fr": "États-Unis"},
+        "phone": "+1 877 448 4820",
+        "url": "https://github.com",
+        "privacy": "https://docs.github.com/en/site-policy/privacy-policies/"
+                   "github-general-privacy-statement",
+    },
+    # OVH shared web hosting: OVH runs the server and keeps the logs for us.
+    "ovh_web": {
+        "label": {"fr": "hébergement web mutualisé OVH",
+                  "en": "OVH shared web hosting"},
+        "logs": "hosted",
+        "name": "OVH SAS",
+        "address": "2 rue Kellermann, 59100 Roubaix",
+        "country": {"en": "France", "fr": "France"},
+        "phone": "+33 9 72 10 10 07",
+        "url": "https://www.ovhcloud.com",
+    },
+    # OVH VPS: we run the web server ourselves on a machine rented from OVH.
+    "ovh_vps": {
+        "label": {"fr": "serveur privé virtuel (VPS) OVH",
+                  "en": "OVH virtual private server (VPS)"},
+        "logs": "vps",
+        "log_days": 14,          # must match logrotate on the server (README);
+                                 # None shows a highlighted "X (à décider)"
+        "name": "OVH SAS",
+        "address": "2 rue Kellermann, 59100 Roubaix",
+        "country": {"en": "France", "fr": "France"},
+        "phone": "+33 9 72 10 10 07",
+        "url": "https://www.ovhcloud.com",
+    },
+}
+
+HOST = HOSTS["github"]
+
+# ---------------------------------------------------------------------------
 # Deploy targets
 #
 # Asset URLs are relative, so they survive any base path untouched. What does
@@ -203,6 +274,8 @@ COPY = {
                            ("#contact", "Contact"), ("mailto:" + EMAIL, EMAIL)],
         "footer_rights": "All rights reserved.",
         "lang_label": "Language",
+        "legal_dir": "legal/",     # served at <base>legal/
+        "legal_link": "Legal notice &amp; privacy",
 
         "404_title": "Page not found — Notyga",
         "404_h1": "This page does not exist",
@@ -338,6 +411,8 @@ COPY = {
                            ("#contact", "Contact"), ("mailto:" + EMAIL, EMAIL)],
         "footer_rights": "Tous droits réservés.",
         "lang_label": "Langue",
+        "legal_dir": "fr/mentions-legales/",
+        "legal_link": "Mentions légales et confidentialité",
 
         "404_title": "Page introuvable — Notyga",
         "404_h1": "Cette page n’existe pas",
@@ -361,8 +436,13 @@ def resolve(lang, target):
     c["origin"] = origin
     c["indexable"] = t["indexable"]
     c["href"] = base + c["dir"]                     # this page
+    c["home"] = base + c["dir"]                     # this language's homepage
     c["en_href"] = base                             # English homepage
     c["fr_href"] = base + "fr/"                     # French homepage
+    c["legal_href"] = base + c["legal_dir"]         # this language's legal page
+    # Prefix for links to homepage sections (#expertise...). Empty on the
+    # homepage itself; other pages point back at it.
+    c["anchor"] = ""
     return c
 
 
@@ -406,9 +486,7 @@ def head(c, *, page_title=None, canonical=True):
   <link rel="icon" href="{a}img/favicon-512.png" sizes="512x512">
   <link rel="apple-touch-icon" href="{a}img/apple-touch-icon.png">
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+  <link rel="preload" href="{a}fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="{a}css/styles.css">
   <script src="{a}js/main.js" defer></script>
 </head>"""
@@ -417,7 +495,7 @@ def head(c, *, page_title=None, canonical=True):
 def header(c):
     a = c["asset_prefix"]
     links = "\n".join(
-        f'            <a class="nav__link" href="{href}">{label}</a>'
+        f'            <a class="nav__link" href="{c["anchor"]}{href}">{label}</a>'
         for href, label in c["nav"]
     )
     en_current = ' aria-current="page"' if c["lang"] == "en" else ""
@@ -428,7 +506,7 @@ def header(c):
 
   <header class="header" data-header>
     <div class="wrap header__inner">
-      <a class="brand" href="{c['href']}" aria-label="Notyga — {c['hero_eyebrow']}">
+      <a class="brand" href="{c['home']}" aria-label="Notyga — {c['hero_eyebrow']}">
         <img src="{a}img/logo.svg" alt="Notyga — Data intelligence" width="524" height="229">
       </a>
 
@@ -452,7 +530,7 @@ def header(c):
             <span class="lang__sep" aria-hidden="true">|</span>
             <a href="{fr_href}" hreflang="fr"{fr_current}>FR</a>
           </p>
-          <a class="btn" href="#contact">{c['cta_nav']}{ARROW}</a>
+          <a class="btn" href="{c['anchor']}#contact">{c['cta_nav']}{ARROW}</a>
         </div>
       </div>
     </div>
@@ -612,11 +690,11 @@ def footer(c):
     a = c["asset_prefix"]
     # The expertise column lists the actual domains, not a copy of the nav.
     nav_col = "\n".join(
-        f'            <li><a href="#expertise">{name}</a></li>'
+        f'            <li><a href="{c["anchor"]}#expertise">{name}</a></li>'
         for _, name, _ in c["services"]
     )
     company_col = "\n".join(
-        f'            <li><a href="{href}">{label}</a></li>'
+        f'            <li><a href="{c["anchor"] + href if href.startswith("#") else href}">{label}</a></li>'
         for href, label in c["footer_company"]
     )
     nav_title, company_title = c["footer_cols"][0][0], c["footer_cols"][1][0]
@@ -644,13 +722,10 @@ def footer(c):
         </nav>
       </div>
 
-      <!-- TODO (legal): a French company site must publish "Mentions légales"
-           and a privacy policy. Add the pages and link them here once the real
-           company details (SIREN, registered address, hosting provider,
-           publication director) are available. -->
-
       <div class="footer__bottom">
-        <p>&copy; <span data-year>2026</span> Notyga. {c['footer_rights']}</p>
+        <p>&copy; <span data-year>2026</span> Notyga. {c['footer_rights']}
+          <span class="footer__sep" aria-hidden="true">·</span>
+          <a class="footer__legal" href="{c['legal_href']}">{c['legal_link']}</a></p>
         <p class="lang">
           <a href="{c['en_href']}" hreflang="en">EN</a>
           <span class="lang__sep" aria-hidden="true">|</span>
@@ -705,7 +780,7 @@ def page(c):
 def error_page(c):
     # Served for any missing URL, at any depth, so relative asset paths would
     # resolve against the wrong directory. Root them at the base instead.
-    c = dict(c, asset_prefix=c["base"] + "assets/")
+    c = dict(c, asset_prefix=c["base"] + "assets/", anchor=c["home"])
     return "\n".join([
         head(c, page_title=c["404_title"], canonical=False),
         "<body>",
@@ -716,6 +791,361 @@ def error_page(c):
         f'      <p>{c["404_p"]}</p>',
         f'      <a class="btn" href="{c["href"]}">{c["404_cta"]}{ARROW}</a>',
         "    </section>",
+        "  </main>",
+        footer(c),
+        "</body>",
+        "</html>",
+        "",
+    ])
+
+
+LEGAL_LABELS = {
+    "en": {"capital": "share capital", "rcs_city": "registry city",
+           "legal_form": "legal form", "address": "registered office",
+           "vat": "VAT number", "phone": "phone number",
+           "director": "publication director"},
+    "fr": {"capital": "capital social", "rcs_city": "ville du greffe",
+           "legal_form": "forme juridique", "address": "adresse du siège",
+           "vat": "n° de TVA", "phone": "numéro de téléphone",
+           "director": "directeur ou directrice de la publication"},
+}
+
+MONTHS = {
+    "en": ["January", "February", "March", "April", "May", "June", "July",
+           "August", "September", "October", "November", "December"],
+    "fr": ["janvier", "février", "mars", "avril", "mai", "juin", "juillet",
+           "août", "septembre", "octobre", "novembre", "décembre"],
+}
+
+
+def hosting_block(h, lang):
+    site = h["url"].split("//")[1]
+    return (f'<p>{h["name"]}<br>{h["address"]}, {h["country"][lang]}<br>\n'
+            f'          {h["phone"]} · <a href="{h["url"]}">{site}</a></p>')
+
+
+def logs_paragraph(h, lang):
+    co, name, kind = LEGAL["company"], h["name"], h["logs"]
+    # Retention not decided yet (None): a highlighted "X" in its place.
+    if h.get("log_days", 0) is None:
+        todo = "à décider" if lang == "fr" else "to be decided"
+        h = dict(h, log_days=f'<mark class="legal__todo">X ({todo})</mark>')
+    if lang == "fr":
+        intro = ("Comme tout serveur web, celui qui héberge ce site reçoit, à chaque visite, "
+                 "votre adresse IP, la page demandée, la date et l’heure, et des informations "
+                 "sur votre navigateur.")
+        basis = "ce qui relève de l’intérêt légitime (article 6.1.f du RGPD)"
+        if kind == "vps":
+            rest = (f"Ce serveur est administré par {co}, sur une machine louée à {name} et "
+                    "située dans l’Union européenne. Il enregistre ces données dans ses journaux "
+                    f"techniques pour assurer la sécurité et le bon fonctionnement du site, {basis}. "
+                    f"{name} fournit l’infrastructure en tant que sous-traitant et n’exploite pas "
+                    "ces données, qui ne font l’objet d’aucun transfert hors de l’Union. Nous ne "
+                    "les consultons qu’en cas d’incident ou d’abus, et elles sont supprimées "
+                    f"automatiquement au bout de {h['log_days']} jours.")
+        elif kind == "hosted":
+            rest = (f"Ces données sont enregistrées par {name} dans ses journaux techniques pour "
+                    f"assurer la sécurité et le bon fonctionnement du service, {basis}. Ces "
+                    f"journaux sont hébergés par {name} pour le compte de {co}, sur des serveurs "
+                    "situés dans l’Union européenne : ils ne font l’objet d’aucun transfert hors "
+                    "de l’Union. Nous ne les consultons qu’en cas d’incident ou d’abus, et ils "
+                    "sont conservés au plus un an.")
+        else:
+            rest = (f"Ces données sont enregistrées par {name} dans ses journaux techniques pour "
+                    f"assurer la sécurité et le bon fonctionnement du service, {basis}. {co} n’y "
+                    f"a pas accès et ne les exploite pas. {name} étant établie aux "
+                    f"{h['country']['fr']}, ces données peuvent y être transférées ; leur durée de "
+                    "conservation et les garanties encadrant ce transfert sont décrites dans "
+                    f"<a href=\"{h['privacy']}\">sa déclaration de confidentialité</a>.")
+    else:
+        intro = ("Like any web server, the one hosting this site receives your IP address, the "
+                 "page requested, the date and time, and information about your browser on "
+                 "every visit.")
+        basis = "which is a legitimate interest (Article 6(1)(f) GDPR)"
+        if kind == "vps":
+            rest = (f"This server is run by {co}, on a machine rented from {name} and located in "
+                    "the European Union. It records this data in its server logs to keep the "
+                    f"site secure and running, {basis}. {name} provides the infrastructure as a "
+                    "processor and does not use this data, which is not transferred outside the "
+                    "EU. We only look at it to investigate an incident or abuse, and it is "
+                    f"deleted automatically after {h['log_days']} days.")
+        elif kind == "hosted":
+            rest = (f"{name} records this data in its server logs to keep the service secure and "
+                    f"running, {basis}. These logs are hosted by {name} on behalf of {co}, on "
+                    "servers located in the European Union: they are not transferred outside the "
+                    "EU. We only look at them to investigate an incident or abuse, and they are "
+                    "kept for no more than one year.")
+        else:
+            rest = (f"{name} records this data in its server logs to keep the service secure and "
+                    f"running, {basis}. {co} has no access to these logs and does not use them. "
+                    f"As {name} is based in the {h['country']['en']}, the data may be transferred "
+                    "there; how long it is kept and the safeguards that apply to the transfer are "
+                    f"set out in <a href=\"{h['privacy']}\">its privacy statement</a>.")
+    return f"<p>{intro} {rest}</p>"
+
+
+def by_host(hosts, lang, render):
+    """One host: its text. Several (review copy): each distinct text, labelled."""
+    texts = [render(h, lang) for h in hosts]
+    if len(set(texts)) == 1:
+        return texts[0]
+    boxes = "\n".join(
+        f'          <div class="legal__variant">\n'
+        f'            <p class="legal__variant-label">Option {chr(65 + i)} · '
+        f'{h["label"][lang]}</p>\n            {t}\n          </div>'
+        for i, (h, t) in enumerate(zip(hosts, texts)))
+    return f'<div class="legal__variants">\n{boxes}\n        </div>'
+
+
+def review_note(hosts, lang):
+    """Banner explaining the options, on a review copy only."""
+    if len(hosts) < 2:
+        return ""
+    sep = " : " if lang == "fr" else ": "
+    labels = " ; ".join(f"{chr(65 + i)}{sep}{h['label'][lang]}" for i, h in enumerate(hosts))
+    if lang == "fr":
+        text = ("<strong>Version de relecture.</strong> Les passages qui dépendent du mode "
+                f"d’hébergement sont proposés en plusieurs options ({labels}). Une seule "
+                "sera publiée.")
+    else:
+        text = ("<strong>Review copy.</strong> Passages that depend on how the site is hosted "
+                f"are given as options ({labels}). Only one will be published.")
+    return f'\n        <p class="legal__review">{text}</p>\n'
+
+
+def legal_sections(lang, hosts=None):
+    """Title, "last updated" line and body of the legal page, per language.
+
+    Structure follows the Saryga site's legal page, corrected per the
+    September 2026 audit of that site: the publisher is the company itself,
+    not whoever built the site, the publication director is a named
+    person, the company details are complete, the cookie section describes
+    what the site actually does, and the privacy policy gives the legal basis,
+    retention, recipients, transfers and rights for each processing.
+    """
+    def v(key):
+        val = LEGAL[key]
+        if isinstance(val, dict):
+            val = val[lang]
+        if val is not None:
+            return val
+        todo = "À compléter :" if lang == "fr" else "To fill in:"
+        return f'<mark class="legal__todo">{todo} {LEGAL_LABELS[lang][key]}</mark>'
+
+    y, m, d = LEGAL_UPDATED
+    co = LEGAL["company"]
+    mail = f'<a href="mailto:{EMAIL}">{EMAIL}</a>'
+    hosts = hosts or [HOST]
+    hosting = by_host(hosts, lang, hosting_block)
+    logs = by_host(hosts, lang, logs_paragraph)
+    note = review_note(hosts, lang)
+    rcs = f"RCS {v('rcs_city')} {LEGAL['siren']}"
+
+    if lang == "fr":
+        return "Mentions légales et confidentialité", \
+            f"Dernière mise à jour : {d} {MONTHS['fr'][m - 1]} {y}", f"""{note}
+        <h2 id="editeur">Éditeur du site</h2>
+        <p>Le site notyga.fr est édité par la société {co}. Notyga est une marque de {co}.</p>
+        <dl>
+          <dt>Raison sociale</dt><dd>{co}</dd>
+          <dt>Forme juridique</dt><dd>{v('legal_form')}</dd>
+          <dt>Capital social</dt><dd>{v('capital')}</dd>
+          <dt>Siège social</dt><dd>{v('address')}</dd>
+          <dt>Immatriculation</dt><dd>{rcs}</dd>
+          <dt>SIRET</dt><dd>{LEGAL['siret']}</dd>
+          <dt>TVA intracommunautaire</dt><dd>{v('vat')}</dd>
+          <dt>Téléphone</dt><dd>{v('phone')}</dd>
+          <dt>E-mail</dt><dd>{mail}</dd>
+        </dl>
+
+        <h2 id="publication">Direction de la publication</h2>
+        <p>{v('director')}, présidente de {co}.</p>
+
+        <h2 id="hebergement">Hébergement</h2>
+        {hosting}
+
+        <h2 id="propriete-intellectuelle">Propriété intellectuelle</h2>
+        <p>L’ensemble du contenu du site notyga.fr, notamment les textes, images, graphismes,
+          logos et icônes, ainsi que leur mise en forme, est la propriété exclusive de {co},
+          à l’exception des marques, logos ou contenus appartenant à d’autres sociétés ou
+          auteurs.</p>
+        <p>Toute reproduction, distribution, modification, adaptation, retransmission ou
+          publication de ces éléments, même partielle, est interdite sans l’autorisation
+          écrite préalable de {co}. Elle constitue une contrefaçon sanctionnée par les
+          articles L.335-2 et suivants du Code de la propriété intellectuelle.</p>
+
+        <h2 id="confidentialite">Politique de confidentialité</h2>
+        <p>Cette politique explique quelles données personnelles sont traitées lorsque vous
+          consultez notyga.fr ou lorsque vous nous écrivez, pourquoi, pendant combien de
+          temps, et comment exercer vos droits. Elle s’appuie sur le Règlement général sur la
+          protection des données (RGPD) et la loi Informatique et Libertés.</p>
+
+        <h3>Responsable du traitement</h3>
+        <p>{co}, {v('address')}, joignable à {mail}.</p>
+
+        <h3>Ce que le site ne collecte pas</h3>
+        <p>Vous pouvez consulter notyga.fr sans nous communiquer aucune donnée. Le site n’a
+          ni formulaire, ni compte utilisateur, ni espace de commentaires. Il ne dépose
+          <strong>aucun cookie</strong>, n’utilise aucun outil de mesure d’audience, de
+          publicité ou de réseau social, et n’intègre aucun contenu provenant d’autres sites :
+          même les polices de caractères sont hébergées sur le site. C’est pourquoi aucun
+          bandeau de consentement ne vous est présenté.</p>
+
+        <h3>Journaux techniques du serveur</h3>
+        {logs}
+
+        <h3>Messages que vous nous envoyez</h3>
+        <p>Si vous nous écrivez à {mail}, nous traitons votre adresse e-mail, votre nom et le
+          contenu de votre message.</p>
+        <ul>
+          <li><strong>Finalité :</strong> vous répondre et donner suite à votre demande,
+            y compris préparer une éventuelle collaboration.</li>
+          <li><strong>Base légale :</strong> notre intérêt légitime à répondre aux demandes
+            qui nous sont adressées et, lorsque vous nous sollicitez en vue d’un contrat, les
+            mesures précontractuelles prises à votre demande (article 6.1.b et 6.1.f du
+            RGPD).</li>
+          <li><strong>Durée de conservation :</strong> trois ans à compter de notre dernier
+            échange, puis suppression. Si une collaboration s’engage, les échanges sont
+            conservés pendant sa durée, puis le temps imposé par nos obligations légales.</li>
+          <li><strong>Destinataires :</strong> les seules personnes de {co} chargées de
+            traiter votre demande. Notre messagerie est fournie par Microsoft
+            ({MAIL_PROVIDER}), qui agit pour notre compte et peut traiter certaines données
+            hors de l’Union européenne, dans le cadre des garanties prévues par le RGPD.</li>
+        </ul>
+        <p>Vos données ne sont ni vendues, ni louées, ni cédées, et ne font l’objet d’aucune
+          décision automatisée ni d’aucun profilage.</p>
+
+        <h3>Vos droits</h3>
+        <p>Vous disposez à tout moment des droits suivants sur vos données :</p>
+        <ul>
+          <li>droit d’accès, de rectification et d’effacement ;</li>
+          <li>droit à la limitation du traitement et droit d’opposition ;</li>
+          <li>droit à la portabilité ;</li>
+          <li>droit de définir des directives sur le sort de vos données après votre
+            décès.</li>
+        </ul>
+        <p>Pour les exercer, écrivez-nous à {mail} ou par courrier à {co},
+          {v('address')}. Nous vous répondrons dans un délai d’un mois. Si un doute
+          raisonnable existe sur votre identité, nous pourrons vous demander d’en
+          justifier.</p>
+        <p>Si vous estimez, après nous avoir contactés, que vos droits ne sont pas respectés,
+          vous pouvez adresser une réclamation à la CNIL, 3 place de Fontenoy, TSA 80715,
+          75334 Paris Cedex 07, ou en ligne sur <a href="https://www.cnil.fr">cnil.fr</a>.</p>
+
+        <h3>Modifications</h3>
+        <p>Cette page peut évoluer, notamment si le site ajoute un service qui traite de
+          nouvelles données. La date de dernière mise à jour figure en haut de page.</p>"""
+
+    return "Legal notice and privacy", \
+        f"Last updated: {d} {MONTHS['en'][m - 1]} {y}", f"""{note}
+        <h2 id="publisher">Publisher</h2>
+        <p>The notyga.fr website is published by {co}. Notyga is a brand of {co}.</p>
+        <dl>
+          <dt>Company name</dt><dd>{co}</dd>
+          <dt>Legal form</dt><dd>{v('legal_form')}</dd>
+          <dt>Share capital</dt><dd>{v('capital')}</dd>
+          <dt>Registered office</dt><dd>{v('address')}, France</dd>
+          <dt>Registration</dt><dd>{rcs}</dd>
+          <dt>SIRET</dt><dd>{LEGAL['siret']}</dd>
+          <dt>EU VAT number</dt><dd>{v('vat')}</dd>
+          <dt>Phone</dt><dd>{LEGAL['phone_intl'] or v('phone')}</dd>
+          <dt>Email</dt><dd>{mail}</dd>
+        </dl>
+
+        <h2 id="publication">Publication director</h2>
+        <p>{v('director')}, President of {co}.</p>
+
+        <h2 id="hosting">Hosting</h2>
+        {hosting}
+
+        <h2 id="intellectual-property">Intellectual property</h2>
+        <p>All content on notyga.fr, including text, images, graphics, logos and icons, and
+          their layout, is the exclusive property of {co}, except for trademarks, logos or
+          content belonging to other companies or authors.</p>
+        <p>Any reproduction, distribution, modification, adaptation, retransmission or
+          publication of this content, even in part, is prohibited without the prior written
+          consent of {co}. It constitutes infringement under Articles L.335-2 et seq. of the
+          French Intellectual Property Code.</p>
+
+        <h2 id="privacy">Privacy policy</h2>
+        <p>This policy explains what personal data is processed when you visit notyga.fr or
+          write to us, why, for how long, and how to exercise your rights. It is based on the
+          General Data Protection Regulation (GDPR) and the French Data Protection Act.</p>
+
+        <h3>Data controller</h3>
+        <p>{co}, {v('address')}, France, reachable at {mail}.</p>
+
+        <h3>What this site does not collect</h3>
+        <p>You can browse notyga.fr without giving us any data. The site has no forms, no user
+          accounts and no comments. It sets <strong>no cookies</strong>, uses no analytics,
+          advertising or social media tools, and embeds no content from other sites: even the
+          fonts are hosted on the site itself. That is why you are not shown a consent
+          banner.</p>
+
+        <h3>Server logs</h3>
+        {logs}
+
+        <h3>Messages you send us</h3>
+        <p>If you write to {mail}, we process your email address, your name and the content of
+          your message.</p>
+        <ul>
+          <li><strong>Purpose:</strong> to reply and follow up on your request, including
+            preparing a possible collaboration.</li>
+          <li><strong>Legal basis:</strong> our legitimate interest in answering the requests
+            we receive and, where you contact us with a view to a contract, steps taken at
+            your request before entering into it (Article 6(1)(b) and (f) GDPR).</li>
+          <li><strong>Retention:</strong> three years from our last exchange, then deleted. If
+            we work together, correspondence is kept for the duration of the engagement, then
+            for as long as the law requires.</li>
+          <li><strong>Recipients:</strong> only the people at {co} who handle your request. Our
+            email is provided by Microsoft ({MAIL_PROVIDER}), which acts on our behalf and may
+            process some data outside the European Union, under the safeguards provided by the
+            GDPR.</li>
+        </ul>
+        <p>Your data is never sold, rented or passed on, and is not used for automated
+          decision-making or profiling.</p>
+
+        <h3>Your rights</h3>
+        <p>You have the following rights over your data at any time:</p>
+        <ul>
+          <li>right of access, rectification and erasure;</li>
+          <li>right to restriction of processing and right to object;</li>
+          <li>right to data portability;</li>
+          <li>right to give instructions on what happens to your data after your death.</li>
+        </ul>
+        <p>To exercise them, write to {mail} or by post to {co}, {v('address')}, France. We
+          will reply within one month. If we have reasonable doubts about your identity, we
+          may ask you to confirm it.</p>
+        <p>If, after contacting us, you believe your rights have not been respected, you can
+          lodge a complaint with the CNIL, the French data protection authority: 3 place de
+          Fontenoy, TSA 80715, 75334 Paris Cedex 07, France, or online at
+          <a href="https://www.cnil.fr">cnil.fr</a>.</p>
+
+        <h3>Changes</h3>
+        <p>This page may change, for example if the site adds a service that processes new
+          data. The date of the last update is shown at the top of the page.</p>"""
+
+
+def legal_page(c, other, hosts=None):
+    # Lives one or two folders down: root the assets, point section links and
+    # the language switcher at the matching pages.
+    c = dict(c, asset_prefix=c["base"] + "assets/", anchor=c["home"],
+             href=c["legal_href"])
+    c[f"{c['lang']}_href"] = c["legal_href"]
+    c[f"{other['lang']}_href"] = other["legal_href"]
+    title, updated, body = legal_sections(c["lang"], hosts)
+
+    return "\n".join([
+        head(c, page_title=f"{title} — Notyga"),
+        "<body>",
+        header(c),
+        '  <main id="main">',
+        '    <article class="section wrap legal">',
+        f'      <h1>{title}</h1>',
+        f'      <p class="legal__updated">{updated}</p>',
+        '      <div class="legal__body">' + body,
+        "      </div>",
+        "    </article>",
         "  </main>",
         footer(c),
         "</body>",
@@ -748,7 +1178,14 @@ def build(target, out_dir):
         "index.html": page(en),
         "fr/index.html": page(fr),
         "404.html": error_page(en),
+        en["legal_dir"] + "index.html": legal_page(en, fr),
+        fr["legal_dir"] + "index.html": legal_page(fr, en),
     }
+
+    missing = [k for k, v in LEGAL.items() if v is None]
+    if missing:
+        print("WARNING  legal page still has fields to fill in LEGAL: "
+              + ", ".join(missing))
 
     if en["indexable"]:
         files["robots.txt"] = (
