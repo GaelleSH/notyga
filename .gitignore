@@ -13,3 +13,11 @@ Thumbs.db
 
 # Standalone copies for sharing (not deployed)
 _share/
+
+# Local only: internal docs and server details, never published on GitHub
+README.md
+deploy.local.json
+
+# Windows files
+desktop.ini
+*.lnk

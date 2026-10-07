@@ -26,7 +26,7 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "_share")
-ORIGIN = "https://notyga.fr"
+ORIGIN = "https://www.notyga.com"
 
 PAGES = {
     "fr/mentions-legales/index.html": "notyga-mentions-legales",

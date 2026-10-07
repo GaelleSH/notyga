@@ -46,6 +46,7 @@ ARROW = ('<svg class="arrow" width="16" height="16" viewBox="0 0 16 16" fill="no
          'stroke-linecap="round" stroke-linejoin="round"/></svg>')
 
 EMAIL = "contact@notyga.com"
+SITE_NAME = "notyga.com"         # how the legal page names the site
 
 # ---------------------------------------------------------------------------
 # Legal details, for the "mentions légales" (French LCEN, art. 6-III) and the
@@ -70,7 +71,7 @@ LEGAL = {
     "director": "Gaëlle Saint-Hilary",
 }
 
-LEGAL_UPDATED = (2026, 10, 6)   # (year, month, day) shown as "last updated"
+LEGAL_UPDATED = (2026, 10, 7)   # (year, month, day) shown as "last updated"
 
 # Who processes the emails sent to contact@notyga.com (MX: Exchange Online).
 MAIL_PROVIDER = "Microsoft 365"
@@ -116,7 +117,7 @@ HOSTS = {
     },
 }
 
-HOST = HOSTS["github"]
+HOST = HOSTS["ovh_vps"]
 
 # ---------------------------------------------------------------------------
 # Deploy targets
@@ -128,23 +129,20 @@ HOST = HOSTS["github"]
 #   base       path the site is served from, leading and trailing slash
 #   origin     scheme + host, for absolute URLs only
 #   indexable  production. False also adds noindex and a disallow-all
-#              robots.txt, so a preview copy cannot compete with notyga.fr
+#              robots.txt, so a preview copy cannot compete with the real site
 #              in search results or be found by anyone not given the link.
 # ---------------------------------------------------------------------------
 
 TARGETS = {
-    # The real site, served from the root of its own domain.
+    # The real site, served from the root of its own domain. The OVH VPS
+    # redirects notyga.com to www.notyga.com, so www is the canonical host.
     "production": {
         "base": "/",
-        "origin": "https://notyga.fr",
+        "origin": "https://www.notyga.com",
         "indexable": True,
     },
-    # Private review copy on a GitHub Pages project site, hence the subpath.
-    "github": {
-        "base": "/notyga/",
-        "origin": "https://hadjurh.github.io",
-        "indexable": False,
-    },
+    # To build a private preview elsewhere, add a target here with its own
+    # base and origin and "indexable": False.
 }
 
 # ---------------------------------------------------------------------------
@@ -743,8 +741,8 @@ def schema(c):
     "@context": "https://schema.org",
     "@type": "Organization",
     "name": "Notyga",
-    "url": "https://notyga.fr/",
-    "logo": "https://notyga.fr/assets/img/logo-full.png",
+    "url": "%(o)s/",
+    "logo": "%(o)s/assets/img/logo-full.png",
     "email": "contact@notyga.com",
     "description": "Data analysis and artificial intelligence for businesses and territories.",
     "parentOrganization": { "@type": "Organization", "name": "Saryga" },
@@ -754,7 +752,7 @@ def schema(c):
       "jobTitle": "Founder"
     }
   }
-  </script>"""
+  </script>""" % {"o": TARGETS["production"]["origin"]}
 
 
 def page(c):
@@ -945,7 +943,7 @@ def legal_sections(lang, hosts=None):
         return "Mentions légales et confidentialité", \
             f"Dernière mise à jour : {d} {MONTHS['fr'][m - 1]} {y}", f"""{note}
         <h2 id="editeur">Éditeur du site</h2>
-        <p>Le site notyga.fr est édité par la société {co}. Notyga est une marque de {co}.</p>
+        <p>Le site {SITE_NAME} est édité par la société {co}. Notyga est une marque de {co}.</p>
         <dl>
           <dt>Raison sociale</dt><dd>{co}</dd>
           <dt>Forme juridique</dt><dd>{v('legal_form')}</dd>
@@ -965,7 +963,7 @@ def legal_sections(lang, hosts=None):
         {hosting}
 
         <h2 id="propriete-intellectuelle">Propriété intellectuelle</h2>
-        <p>L’ensemble du contenu du site notyga.fr, notamment les textes, images, graphismes,
+        <p>L’ensemble du contenu du site {SITE_NAME}, notamment les textes, images, graphismes,
           logos et icônes, ainsi que leur mise en forme, est la propriété exclusive de {co},
           à l’exception des marques, logos ou contenus appartenant à d’autres sociétés ou
           auteurs.</p>
@@ -976,7 +974,7 @@ def legal_sections(lang, hosts=None):
 
         <h2 id="confidentialite">Politique de confidentialité</h2>
         <p>Cette politique explique quelles données personnelles sont traitées lorsque vous
-          consultez notyga.fr ou lorsque vous nous écrivez, pourquoi, pendant combien de
+          consultez {SITE_NAME} ou lorsque vous nous écrivez, pourquoi, pendant combien de
           temps, et comment exercer vos droits. Elle s’appuie sur le Règlement général sur la
           protection des données (RGPD) et la loi Informatique et Libertés.</p>
 
@@ -984,7 +982,7 @@ def legal_sections(lang, hosts=None):
         <p>{co}, {v('address')}, joignable à {mail}.</p>
 
         <h3>Ce que le site ne collecte pas</h3>
-        <p>Vous pouvez consulter notyga.fr sans nous communiquer aucune donnée. Le site n’a
+        <p>Vous pouvez consulter {SITE_NAME} sans nous communiquer aucune donnée. Le site n’a
           ni formulaire, ni compte utilisateur, ni espace de commentaires. Il ne dépose
           <strong>aucun cookie</strong>, n’utilise aucun outil de mesure d’audience, de
           publicité ou de réseau social, et n’intègre aucun contenu provenant d’autres sites :
@@ -1039,7 +1037,7 @@ def legal_sections(lang, hosts=None):
     return "Legal notice and privacy", \
         f"Last updated: {d} {MONTHS['en'][m - 1]} {y}", f"""{note}
         <h2 id="publisher">Publisher</h2>
-        <p>The notyga.fr website is published by {co}. Notyga is a brand of {co}.</p>
+        <p>The {SITE_NAME} website is published by {co}. Notyga is a brand of {co}.</p>
         <dl>
           <dt>Company name</dt><dd>{co}</dd>
           <dt>Legal form</dt><dd>{v('legal_form')}</dd>
@@ -1059,7 +1057,7 @@ def legal_sections(lang, hosts=None):
         {hosting}
 
         <h2 id="intellectual-property">Intellectual property</h2>
-        <p>All content on notyga.fr, including text, images, graphics, logos and icons, and
+        <p>All content on {SITE_NAME}, including text, images, graphics, logos and icons, and
           their layout, is the exclusive property of {co}, except for trademarks, logos or
           content belonging to other companies or authors.</p>
         <p>Any reproduction, distribution, modification, adaptation, retransmission or
@@ -1068,7 +1066,7 @@ def legal_sections(lang, hosts=None):
           French Intellectual Property Code.</p>
 
         <h2 id="privacy">Privacy policy</h2>
-        <p>This policy explains what personal data is processed when you visit notyga.fr or
+        <p>This policy explains what personal data is processed when you visit {SITE_NAME} or
           write to us, why, for how long, and how to exercise your rights. It is based on the
           General Data Protection Regulation (GDPR) and the French Data Protection Act.</p>
 
@@ -1076,7 +1074,7 @@ def legal_sections(lang, hosts=None):
         <p>{co}, {v('address')}, France, reachable at {mail}.</p>
 
         <h3>What this site does not collect</h3>
-        <p>You can browse notyga.fr without giving us any data. The site has no forms, no user
+        <p>You can browse {SITE_NAME} without giving us any data. The site has no forms, no user
           accounts and no comments. It sets <strong>no cookies</strong>, uses no analytics,
           advertising or social media tools, and embeds no content from other sites: even the
           fonts are hosted on the site itself. That is why you are not shown a consent
