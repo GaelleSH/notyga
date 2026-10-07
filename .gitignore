@@ -15,7 +15,7 @@ Thumbs.db
 _share/
 
 # Local only: internal docs and server details, never published on GitHub
-README.md
+README_local.md
 deploy.local.json
 
 # Windows files
